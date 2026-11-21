@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>My Little Pony API</title>
+</head>
+<body>
+
+<h1>My Little Pony Characters</h1>
+
+<h2>Characters (click a name)</h2>
+<ul id="characterlist"></ul>
+
+<h2>Character Details</h2>
+<div id="details">Click a character to see details.</div>
+
+<script>
+
+   // PonyAPI - API key gerekmiyor
+   let url = "https://ponyapi.net/v1/";
+   let characterlist = document.getElementById("characterlist");
+   let details = document.getElementById("details");
+
+
+   // API CALL 1: karakter listesini getir
+   async function fetchCharacters() {
+      const response = await fetch(url + "character/all?limit=30");
+      console.log(response);
+
+      const data = await response.json();
+      console.log(data);
+
+      data.data.forEach(character => {
+         // her karakter icin tiklanabilir bir isim yaz
+         // listede de ilk resmi goster (resim yoksa sadece isim)
+         let img = character.image
+            ? `<img src="${character.image[0]}" width="80" referrerpolicy="no-referrer">`
+            : "";
+
+         characterlist.innerHTML += `<li>
+            <a href="#" onclick="fetchCharacterDetails(${character.id}); return false;">
+               ${character.name}
+            </a>
+            <br>
+            ${img}
+         </li>`;
+      });
+   }
+
+
+   // API CALL 2: tiklanan karakterin detaylarini getir
+   async function fetchCharacterDetails(id) {
+      const response = await fetch(url + "character/" + id);
+      console.log(response);
+
+      const data = await response.json();
+      console.log(data);
+
+      const c = data.data[0];
+
+      // residence ve occupation "\n" ile ayrilmis duz yazi, <br> ile alt alta yaziyoruz
+      // bazi bilgiler her karakterde yok, o yuzden || "Unknown" kullaniyoruz
+      let residence = c.residence ? c.residence.replaceAll("\n", "<br>") : "Unknown";
+      let occupation = c.occupation ? c.occupation.replaceAll("\n", "<br>") : "Unknown";
+
+      // butun resimleri goster
+      let images = "";
+      if (c.image) {
+         c.image.forEach(src => {
+            images += `<img src="${src}" width="150" referrerpolicy="no-referrer"> `;
+         });
+      }
+
+      details.innerHTML = `
+         <h3>${c.name}</h3>
+         <p>${images}</p>
+         <p><b>Alias:</b> ${c.alias || "Unknown"}</p>
+         <p><b>Sex:</b> ${c.sex || "Unknown"}</p>
+         <p><b>Kind:</b> ${c.kind ? c.kind.join(", ") : "Unknown"}</p>
+         <p><b>Residence:</b><br>${residence}</p>
+         <p><b>Occupation:</b><br>${occupation}</p>
+         <p><a href="${c.url}" target="_blank">Wiki page</a></p>
+      `;
+   }
+
+
+   fetchCharacters();
+
+</script>
+
+</body>
+</html>
